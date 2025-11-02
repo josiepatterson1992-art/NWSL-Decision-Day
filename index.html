@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWSL 2025 Playoff Scenario Calculator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .container-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .playoff-spot {
+            background-color: #e6fffa; /* Tailwind teal-50 */
+            border-left: 5px solid #38bdf8; /* Blue accent for visual appeal */
+        }
+        .home-host-spot {
+            background-color: #dbeafe; /* Tailwind blue-100 */
+            border-left: 5px solid #1d4ed8; /* Darker blue accent */
+        }
+        .shield-winner {
+            background-color: #fef9c3; /* Tailwind yellow-100 */
+            border-left: 5px solid #d97706; /* Amber accent */
+        }
+        .eliminated {
+            opacity: 0.5;
+            filter: grayscale(30%);
+        }
+        .team-row:nth-child(even) {
+            background-color: #f9fafb; /* Stripe effect */
+        }
+        .team-row:hover {
+            background-color: #eff6ff; /* Light blue on hover */
+            transform: scale(1.005);
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+            position: relative;
+        }
+        /* Style for number inputs */
+        .score-input {
+            width: 45%;
+            padding: 0.5rem;
+            border: 2px solid #a5b4fc; /* Tailwind indigo-300 */
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield; /* Hide arrows in Firefox */
+        }
+        .score-input:focus {
+            outline: none;
+            border-color: #4f46e5; /* Tailwind indigo-600 */
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        /* Hide arrows for Chrome, Safari, Edge */
+        .score-input::-webkit-outer-spin-button,
+        .score-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Mobile-specific adjustments for standings table */
+        @media (max-width: 768px) {
+            .table-cell-lg { display: none; }
+            .table-header-lg { display: none; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2 tracking-tight">NWSL 2025 Playoff Race</h1>
+            <p class="text-xl text-gray-600">Decision Day Scenario Generator</p>
+        </header>
+        
+        <!-- Scenario Input Section -->
+        <div id="scenarios" class="container-card p-6 md:p-8 mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-3">Final Regular Season Matches (Decision Day)</h2>
+            <div id="match-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Match inputs will be generated here -->
+            </div>
+            <p class="text-sm text-gray-500 mt-6">
+                **Note:** The initial data reflects the standings before Decision Day (25 games played). Enter a score for each match to calculate the final 2025 Regular Season table and playoff seeding.
+            </p>
+        </div>
+
+        <!-- Standings Table Section -->
+        <div class="container-card p-4 md:p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-3">Simulated Final Standings (GP=26)</h2>
+            <div class="overflow-x-auto relative">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-indigo-50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th scope="col" class="px-2 py-3 text-center text-xs font-bold text-indigo-700 uppercase tracking-wider rounded-tl-xl">#</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">Team</th>
+                            <th scope="col" class="px-2 py-3 text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">PTS</th>
+                            <th scope="col" class="px-2 py-3 table-header-lg text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">W</th>
+                            <th scope="col" class="px-2 py-3 table-header-lg text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">L</th>
+                            <th scope="col" class="px-2 py-3 text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">D</th>
+                            <th scope="col" class="px-2 py-3 table-header-lg text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">GF</th>
+                            <th scope="col" class="px-2 py-3 text-center text-xs font-bold text-indigo-700 uppercase tracking-wider">GD</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider rounded-tr-xl">Scenario / Seeding</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-body" class="divide-y divide-gray-100">
+                        <!-- Table rows will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Legend -->
+            <div class="mt-8 text-sm p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <p class="font-bold text-gray-800 mb-3 text-base">Key Scenarios:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
+                    <span class="flex items-center">
+                        <span class="w-5 h-5 rounded-md shield-winner mr-3 border border-amber-600 shadow-sm"></span> **NWSL Shield Winner** (1st Seed)
+                    </span>
+                    <span class="flex items-center">
+                        <span class="w-5 h-5 rounded-md home-host-spot mr-3 border border-blue-700 shadow-sm"></span> **Home Quarterfinal Host** (Seeds 2-4)
+                    </span>
+                    <span class="flex items-center">
+                        <span class="w-5 h-5 rounded-md playoff-spot mr-3 border border-sky-500 shadow-sm"></span> **Playoff Berth** (Seeds 5-8)
+                    </span>
+                    <span class="flex items-center text-gray-500">
+                        <span class="w-5 h-5 rounded-md bg-white mr-3 border border-gray-300 shadow-sm"></span> Eliminated (Outside Top 8)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial Standings Data (Pre-Decision Day - GP=25)
+        // Data sourced from available 2025 NWSL Standings reports.
+        const initialStandings = [
+            { id: 'KC', team: 'KC Current', Pts: 62, W: 20, L: 3, D: 2, GF: 47, GA: 12, GD: 35, GP: 25 },
+            { id: 'WAS', team: 'Washington Spirit', Pts: 44, W: 12, L: 5, D: 8, GF: 42, GA: 32, GD: 10, GP: 25 },
+            { id: 'ORL', team: 'Orlando Pride', Pts: 39, W: 11, L: 8, D: 6, GF: 32, GA: 26, GD: 6, GP: 25 },
+            { id: 'SEA', team: 'Seattle Reign FC', Pts: 38, W: 10, L: 7, D: 8, GF: 31, GA: 28, GD: 3, GP: 25 },
+            { id: 'SD', team: 'San Diego Wave', Pts: 37, W: 10, L: 8, D: 7, GF: 40, GA: 32, GD: 8, GP: 25 },
+            { id: 'POR', team: 'Portland Thorns', Pts: 37, W: 10, L: 8, D: 7, GF: 34, GA: 29, GD: 5, GP: 25 },
+            { id: 'GFC', team: 'Gotham FC', Pts: 36, W: 9, L: 7, D: 9, GF: 33, GA: 22, GD: 11, GP: 25 },
+            { id: 'LOU', team: 'Racing Louisville', Pts: 34, W: 9, L: 9, D: 7, GF: 34, GA: 38, GD: -4, GP: 25 },
+            { id: 'NC', team: 'NC Courage', Pts: 32, W: 8, L: 9, D: 8, GF: 34, GA: 37, GD: -3, GP: 25 },
+            { id: 'HOU', team: 'Houston Dash', Pts: 30, W: 8, L: 11, D: 6, GF: 27, GA: 37, GD: -10, GP: 25 },
+            { id: 'LA', team: 'Angel City FC', Pts: 27, W: 7, L: 12, D: 6, GF: 30, GA: 39, GD: -9, GP: 25 },
+            { id: 'UTA', team: 'Utah Royals', Pts: 22, W: 5, L: 13, D: 7, GF: 27, GA: 42, GD: -15, GP: 25 },
+            { id: 'BAY', team: 'Bay FC', Pts: 20, W: 4, L: 13, D: 8, GF: 26, GA: 40, GD: -14, GP: 25 },
+            { id: 'CHI', team: 'Chicago Stars', Pts: 17, W: 2, L: 12, D: 11, GF: 30, GA: 53, GD: -23, GP: 25 },
+        ];
+
+        // Decision Day Matches to be simulated (Home Team vs. Away Team)
+        // homeScore/awayScore now serve as default scores for the input fields.
+        const decisionDayMatches = [
+            { home: 'KC', away: 'SD', defaultHomeScore: 1, defaultAwayScore: 1, name: 'KC vs SD' },
+            { home: 'UTA', away: 'WAS', defaultHomeScore: 0, defaultAwayScore: 2, name: 'UTA vs WAS' },
+            { home: 'POR', away: 'HOU', defaultHomeScore: 2, defaultAwayScore: 1, name: 'POR vs HOU' },
+            { home: 'ORL', away: 'SEA', defaultHomeScore: 1, defaultAwayScore: 0, name: 'ORL vs SEA' },
+            { home: 'NC', away: 'GFC', defaultHomeScore: 2, defaultAwayScore: 1, name: 'NC vs GFC' },
+            { home: 'LOU', away: 'BAY', defaultHomeScore: 3, defaultAwayScore: 0, name: 'LOU vs BAY' },
+            { home: 'CHI', away: 'LA', defaultHomeScore: 2, defaultAwayScore: 2, name: 'CHI vs LA' },
+        ];
+
+        let currentStandings = [];
+        
+        // --- NWSL Tiebreaker Logic ---
+        // 1. Points (Pts)
+        // 2. Overall Goal Difference (GD)
+        // 3. Most total Wins (W)
+        // 4. Most Goals Scored (GF)
+        const nwslSort = (a, b) => {
+            if (b.Pts !== a.Pts) return b.Pts - a.Pts;
+            if (b.GD !== a.GD) return b.GD - a.GD;
+            if (b.W !== a.W) return b.W - a.W;
+            if (b.GF !== a.GF) return b.GF - a.GF;
+            return a.id.localeCompare(b.id); // Fallback for display stability
+        };
+
+        // --- Core Simulation Functions ---
+
+        const findTeam = (id) => currentStandings.find(t => t.id === id);
+
+        const applyMatchResultWithScores = (match, homeGF, awayGF) => {
+            const homeTeam = findTeam(match.home);
+            const awayTeam = findTeam(match.away);
+            
+            // Increment GP only if it hasn't been done yet (ensures data is only updated once per sim run)
+            if (homeTeam.GP < 26) homeTeam.GP++;
+            if (awayTeam.GP < 26) awayTeam.GP++;
+            
+            let homePts = 0, homeW = 0, homeD = 0, homeL = 0;
+            let awayPts = 0, awayW = 0, awayD = 0, awayL = 0;
+
+            // Determine W/D/L and Points based on entered scores
+            if (homeGF > awayGF) {
+                homePts = 3; homeW = 1;
+                awayPts = 0; awayL = 1;
+            } else if (awayGF > homeGF) {
+                homePts = 0; homeL = 1;
+                awayPts = 3; awayW = 1;
+            } else { // Draw
+                homePts = 1; homeD = 1;
+                awayPts = 1; awayD = 1;
+            }
+
+            // Update Home Team stats
+            homeTeam.Pts += homePts;
+            homeTeam.W += homeW;
+            homeTeam.L += homeL;
+            homeTeam.D += homeD;
+            homeTeam.GF += homeGF;
+            homeTeam.GA += awayGF; // GA for home is goals scored by away
+            homeTeam.GD = homeTeam.GF - homeTeam.GA;
+
+            // Update Away Team stats
+            awayTeam.Pts += awayPts;
+            awayTeam.W += awayW;
+            awayTeam.L += awayL;
+            awayTeam.D += awayD;
+            awayTeam.GF += awayGF;
+            awayTeam.GA += homeGF; // GA for away is goals scored by home
+            awayTeam.GD = awayTeam.GF - awayTeam.GA;
+        };
+
+        // --- Event Handler ---
+
+        // Called whenever any score input changes
+        const handleScoreChange = () => {
+            simulateAndRenderStandings();
+        };
+
+        // Expose function globally for HTML onchange event
+        window.handleScoreChange = handleScoreChange;
+
+        // --- Rendering Functions ---
+
+        const renderMatchInputs = () => {
+            const container = document.getElementById('match-inputs');
+            container.innerHTML = '';
+
+            decisionDayMatches.forEach((match, index) => {
+                const matchHtml = `
+                    <div class="bg-indigo-50 p-5 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 transition">
+                        <p class="font-semibold text-lg text-indigo-900 mb-4 text-center">
+                            ${match.home} <span class="text-gray-500 font-normal mx-2">vs.</span> ${match.away}
+                        </p>
+                        <div class="flex justify-center items-center space-x-3">
+                            <!-- Home Score Input -->
+                            <input
+                                type="number"
+                                id="match-home-score-${index}"
+                                value="${match.defaultHomeScore}"
+                                min="0"
+                                class="score-input bg-white text-indigo-800"
+                                onchange="handleScoreChange()"
+                                onkeyup="handleScoreChange()"
+                            >
+                            <span class="text-2xl font-bold text-indigo-600">-</span>
+                            <!-- Away Score Input -->
+                            <input
+                                type="number"
+                                id="match-away-score-${index}"
+                                value="${match.defaultAwayScore}"
+                                min="0"
+                                class="score-input bg-white text-indigo-800"
+                                onchange="handleScoreChange()"
+                                onkeyup="handleScoreChange()"
+                            >
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += matchHtml;
+            });
+        };
+
+        const simulateAndRenderStandings = () => {
+            // 1. Reset standings (Create a deep copy of initial data)
+            currentStandings = JSON.parse(JSON.stringify(initialStandings));
+
+            // 2. Apply all simulated match results based on current score inputs
+            decisionDayMatches.forEach((match, index) => {
+                const homeScoreElement = document.getElementById(`match-home-score-${index}`);
+                const awayScoreElement = document.getElementById(`match-away-score-${index}`);
+
+                // Read and parse scores, defaulting to 0 if input is invalid/empty
+                const homeScore = parseInt(homeScoreElement?.value) || 0;
+                const awayScore = parseInt(awayScoreElement?.value) || 0;
+                
+                applyMatchResultWithScores(match, homeScore, awayScore);
+            });
+
+            // 3. Sort the standings
+            currentStandings.sort(nwslSort);
+
+            // 4. Render the table
+            const standingsBody = document.getElementById('standings-body');
+            standingsBody.innerHTML = '';
+
+            currentStandings.forEach((team, index) => {
+                const rank = index + 1;
+                let rowClass = 'team-row transition duration-200';
+                let scenarioText = '';
+
+                // Determine Clinching Scenarios
+                if (rank === 1) {
+                    rowClass += ' shield-winner font-extrabold';
+                    scenarioText = `🏆 NWSL Shield & 1st Seed`;
+                } else if (rank <= 4) {
+                    rowClass += ' home-host-spot font-bold';
+                    scenarioText = `🏠 Home Quarterfinal Host (${rank} Seed)`;
+                } else if (rank <= 8) {
+                    rowClass += ' playoff-spot font-semibold';
+                    scenarioText = `🎟️ Playoff Berth (${rank} Seed)`;
+                } else {
+                    rowClass += ' eliminated text-gray-500';
+                    scenarioText = '❌ Eliminated from Playoffs';
+                }
+
+                // Add text for locked spots (assuming KC and WAS were locked into top 2 before Decision Day)
+                // This logic is slightly simplistic but works well for the simulation display
+                if (team.id === 'KC' && index === 0) {
+                    scenarioText = '👑 NWSL Shield Winner (Locked)';
+                } else if (team.id === 'WAS' && index === 1) {
+                    scenarioText = '🏠 Home Quarterfinal Host (Locked)';
+                }
+                
+                // Determine elimination status for visual effect
+                if (rank > 8 && team.GP === 26) {
+                    rowClass += ' eliminated';
+                }
+
+                const row = `
+                    <tr class="${rowClass}">
+                        <td class="px-2 py-3 whitespace-nowrap text-sm font-extrabold text-center text-gray-900">${rank}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${team.team} <span class="text-gray-500 text-xs">(${team.id})</span></td>
+                        <td class="px-2 py-3 whitespace-nowrap text-base font-bold text-center text-indigo-700">${team.Pts}</td>
+                        <td class="px-2 py-3 whitespace-nowrap table-cell-lg text-sm text-gray-700 text-center">${team.W}</td>
+                        <td class="px-2 py-3 whitespace-nowrap table-cell-lg text-sm text-gray-700 text-center">${team.L}</td>
+                        <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-700 text-center">${team.D}</td>
+                        <td class="px-2 py-3 whitespace-nowrap table-cell-lg text-sm text-gray-700 text-center">${team.GF}</td>
+                        <td class="px-2 py-3 whitespace-nowrap text-sm font-extrabold text-center ${team.GD > 0 ? 'text-green-600' : (team.GD < 0 ? 'text-red-600' : 'text-gray-600')}">${team.GD > 0 ? '+' : ''}${team.GD}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">${scenarioText}</td>
+                    </tr>
+                `;
+                standingsBody.innerHTML += row;
+            });
+        };
+
+        // Initial setup on window load
+        window.onload = () => {
+            renderMatchInputs();
+            simulateAndRenderStandings();
+        };
+    </script>
+</body>
+</html>
+
+
